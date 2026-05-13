@@ -28,19 +28,28 @@ jobs:
       - name: Configure Docker auth
         run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
+      # 🔥 Generate version tag from commit SHA
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      # 🏗 Build image with version tag
       - name: Build Docker image
         run: |
-          docker build -t asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:latest .
+          docker build -t asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:${IMAGE_TAG} .
 
+      # 📦 Push versioned image
       - name: Push Docker image
         run: |
-          docker push asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:latest
+          docker push asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:${IMAGE_TAG}
 
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials logistics-cluster --zone asia-south1-a
 
+      # 🚀 Deploy using new image version (no latest)
       - name: Deploy to GKE
         run: |
-          kubectl apply -f deployment.yaml
+          kubectl set image deployment/ai-backend \
+            ai-backend=asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:${IMAGE_TAG}
+
           kubectl apply -f service.yaml
