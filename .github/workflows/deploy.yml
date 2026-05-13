@@ -1,0 +1,36 @@
+name: Deploy AI Logistics Platform
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Setup gcloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker auth
+      run: |
+        gcloud auth configure-docker asia-south1-docker.pkg.dev
+
+    - name: Build & Push Docker image
+      run: |
+        gcloud builds submit \
+          --tag asia-south1-docker.pkg.dev/devishree-logistics-01/ai-repo/ai-backend:v1 .
+
+    - name: Deploy to GKE
+      run: |
+        gcloud container clusters get-credentials ai-logistics-cluster --region asia-south1
+        kubectl apply -f deployment.yaml
+        kubectl apply -f service.yaml
