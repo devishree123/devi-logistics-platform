@@ -10,7 +10,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write   # REQUIRED for Workload Identity Federation
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -26,18 +26,21 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker auth
-        run: gcloud auth configure-docker
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev
 
       - name: Build Docker image
         run: |
-          docker build -t gcr.io/ai-logistics-platform/ai-backend:latest .
+          docker build -t asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:latest .
 
       - name: Push Docker image
         run: |
-          docker push gcr.io/ai-logistics-platform/ai-backend:latest
+          docker push asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend:latest
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials logistics-cluster --zone asia-south1-a
 
       - name: Deploy to GKE
         run: |
-          gcloud container clusters get-credentials YOUR_CLUSTER_NAME --region asia-south1
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
