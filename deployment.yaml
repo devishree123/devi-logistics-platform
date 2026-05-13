@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-backend
+  template:
+    metadata:
+      labels:
+        app: ai-backend
+    spec:
+      containers:
+      - name: ai-backend
+        image: asia-south1-docker.pkg.dev/devishree-logistics-01/ai-repo/ai-backend:v1
+        ports:
+        - containerPort: 8080

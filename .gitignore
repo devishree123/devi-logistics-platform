@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.log
+*.sqlite
+.env
+.kube/
+.gemini/
+.cache/
+.local/
+node_modules/
