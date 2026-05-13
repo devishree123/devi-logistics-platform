@@ -1,4 +1,4 @@
-name: Deploy AI Logistics Platform
+name: Deploy AI Logistics Platform to GKE
 
 on:
   push:
@@ -8,29 +8,36 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write   # REQUIRED for Workload Identity Federation
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/280714936496/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-deployer@ai-logistics-platform.iam.gserviceaccount.com
 
-    - name: Setup gcloud SDK
-      uses: google-github-actions/setup-gcloud@v2
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
 
-    - name: Configure Docker auth
-      run: |
-        gcloud auth configure-docker asia-south1-docker.pkg.dev
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker
 
-    - name: Build & Push Docker image
-      run: |
-        gcloud builds submit \
-          --tag asia-south1-docker.pkg.dev/devishree-logistics-01/ai-repo/ai-backend:v1 .
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/ai-logistics-platform/ai-backend:latest .
 
-    - name: Deploy to GKE
-      run: |
-        gcloud container clusters get-credentials ai-logistics-cluster --region asia-south1
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
+      - name: Push Docker image
+        run: |
+          docker push gcr.io/ai-logistics-platform/ai-backend:latest
+
+      - name: Deploy to GKE
+        run: |
+          gcloud container clusters get-credentials YOUR_CLUSTER_NAME --region asia-south1
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
