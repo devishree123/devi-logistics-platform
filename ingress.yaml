@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-backend-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: ai-static-ip
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-backend-service
+            port:
+              number: 80

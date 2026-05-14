@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-backend-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-backend
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: ai-backend
+        version: canary
+    spec:
+      containers:
+      - name: ai-backend
+        image: asia-south1-docker.pkg.dev/ai-logistics-platform/ai-repo/ai-backend@sha256:0bd683b9b943f3217e8404cee91eba815f06083c9d599976c4489482d3f03a91
+        ports:
+        - containerPort: 8000
